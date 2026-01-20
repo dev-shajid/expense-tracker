@@ -39,3 +39,5 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+shajid-expense-tracker-firebase-adminsdk-fbsvc-58c69c2437.json
