@@ -9,6 +9,8 @@ import Link from "next/link"
 import { GroupsListSkeleton } from "@/components/skeletons"
 import { useGroups } from "@/services/groups.service"
 
+export const dynamic = 'force-dynamic';
+
 export default function GroupsPage() {
   const { currentOrg } = useOrganization()
   const { data: groups, isLoading: loading, refetch: refetchGroups } = useGroups(currentOrg?.id!);

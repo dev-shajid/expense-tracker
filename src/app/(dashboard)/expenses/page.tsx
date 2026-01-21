@@ -11,8 +11,8 @@ import { useGroups } from "@/services/groups.service"
 export default function ExpensesPage() {
   const { currentOrg } = useOrganization()
 
-  const {data: expenses, isLoading: expensesLoading, refetch: refetchExpenses} = useExpenses(currentOrg?.id!);
-  const {data: groups, isLoading: groupsLoading, refetch: refetchGroups} = useGroups(currentOrg?.id!);
+  const { data: expenses, isLoading: expensesLoading, refetch: refetchExpenses } = useExpenses(currentOrg?.id!);
+  const { data: groups, isLoading: groupsLoading, refetch: refetchGroups } = useGroups(currentOrg?.id!);
 
   const onSuccess = () => {
     refetchExpenses();

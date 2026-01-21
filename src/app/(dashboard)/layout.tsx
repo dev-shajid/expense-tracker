@@ -1,6 +1,6 @@
-import DockMenu from "@/components/dock-menu";
 import Header from "@/components/header";
 import { QueryProvider } from "@/contexts/QueryProvider";
+import DockMenu from "@/components/dock-menu";
 
 export default function RootLayout({
   children,

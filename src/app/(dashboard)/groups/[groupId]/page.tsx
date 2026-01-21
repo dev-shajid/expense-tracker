@@ -37,8 +37,8 @@ export default function GroupDetailsPage() {
 
     const groupId = params.groupId as string
 
-    const {data: group, isLoading: groupLoading, refetch: refetchGroupDetails} = useGroupDetails(groupId)
-    const {data: expenses, isLoading: expensesLoading, refetch: refetchExpenses} = useExpensesForGroup(groupId)
+    const { data: group, isLoading: groupLoading, refetch: refetchGroupDetails } = useGroupDetails(groupId)
+    const { data: expenses, isLoading: expensesLoading, refetch: refetchExpenses } = useExpensesForGroup(groupId)
     const updateGroup = useUpdateGroup();
     const deleteGroup = useDeleteGroup();
 
@@ -51,7 +51,7 @@ export default function GroupDetailsPage() {
         deleteGroup.mutate({
             id: group.id,
             orgId: currentOrg.id,
-        },{
+        }, {
             onSettled: () => {
                 setActionLoading(false)
                 setDeleteDialogOpen(false)
