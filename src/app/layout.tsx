@@ -6,6 +6,7 @@ import { AuthProvider } from '@/contexts/AuthContext';
 import { Toaster } from "@/components/ui/sonner";
 import { OrganizationProvider } from "@/contexts/OrganizationContext";
 import { QueryProvider } from "@/contexts/QueryProvider";
+import InstallPrompt from "@/components/InstallPrompt";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -33,6 +34,10 @@ export default function RootLayout({
       suppressHydrationWarning
       lang="en"
     >
+      <head>
+        <link rel="manifest" href="/manifest.json" />
+        <meta name="theme-color" content="#000000" />
+      </head>
       <body
         suppressContentEditableWarning
         suppressHydrationWarning
@@ -47,6 +52,7 @@ export default function RootLayout({
               </OrganizationProvider>
             </AuthProvider>
           </QueryProvider>
+          <InstallPrompt />
         </ThemeProvider>
       </body>
     </html>
