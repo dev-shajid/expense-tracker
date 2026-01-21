@@ -21,6 +21,15 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Daily Expense Tracker Software",
   description: "This project is a simple expense tracker application built with Next.js, TypeScript, and Firebase. It allows users to track their daily expenses, manage budgets.",
+  manifest: "/manifest.webmanifest",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "Expense Tracker",
+  },
+  formatDetection: {
+    telephone: false,
+  },
 };
 
 export default function RootLayout({
@@ -35,8 +44,10 @@ export default function RootLayout({
       lang="en"
     >
       <head>
-        <link rel="manifest" href="/manifest.json" />
+        <link rel="manifest" href="/manifest.webmanifest" />
         <meta name="theme-color" content="#000000" />
+        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+        <link rel="apple-touch-icon" href="/logo.png" />
       </head>
       <body
         suppressContentEditableWarning

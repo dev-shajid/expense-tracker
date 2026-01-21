@@ -76,7 +76,7 @@ export default function DockMenu() {
 
     // Mobile version with native bottom navigation style
     const MobileNav = () => (
-        <nav className="fixed bottom-0 left-0 right-0 flex md:hidden bg-background border-t border-border">
+        <nav className="fixed pt-2 pb-3 bottom-0 left-0 right-0 flex md:hidden bg-background border-t border-border">
             <div className="flex w-full items-center justify-around">
                 {DATA.map((item) => {
                     const isActive = pathname === item.href
