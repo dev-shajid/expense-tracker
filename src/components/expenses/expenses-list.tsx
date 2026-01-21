@@ -1,8 +1,7 @@
-
 "use client"
 
 import { Expense, GroupExpense } from "@/types"
-import { formatCurrency, MOCK_GROUPS } from "@/lib/store"
+import { formatCurrency } from "@/lib/utils"
 import { format } from "date-fns"
 import { cn } from "@/lib/utils"
 import { ExpenseDialog } from "@/components/expenses/expense-dialog"
@@ -22,7 +21,7 @@ export function ExpensesList({ expenses, groups, className, showGroupBadge = tru
     // Here we'll do a quick lookup
     const getGroupName = (expense: Expense) => {
         if (expense.groupId && expense.groupId !== 'none') {
-            const groupList = groups || MOCK_GROUPS;
+            const groupList = groups || [];
             const group = groupList.find(g => g.id === expense.groupId);
             return group?.title;
         }

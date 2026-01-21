@@ -1,4 +1,4 @@
-'use cache';
+'use server';
 
 import { adminDb } from '@/lib/firebase/admin';
 import {
@@ -8,7 +8,6 @@ import {
     Stats,
     Organization
 } from '@/types';
-import { cacheTag } from 'next/cache';
 
 // =======================
 // Firestore Converters
@@ -45,11 +44,10 @@ export const getExpenses = async (orgId: string): Promise<Expense[]> => {
         .withConverter(expenseConverter)
         .get();
 
-    cacheTag(`expenses-org-${orgId}`, `stats-org-${orgId}`);
     return snapshot.docs.map(doc => ({
         ...doc.data(),
         date: doc.data().date,
-    }));
+    })).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 };
 
 // =======================
@@ -65,11 +63,10 @@ export const getExpensesForGroup = async (groupId: string): Promise<Expense[]> =
         .withConverter(expenseConverter)
         .get();
 
-    cacheTag(`expenses-group-${groupId}`);
     return snapshot.docs.map(doc => ({
         ...doc.data(),
         date: doc.data().date,
-    }))
+    })).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 };
 
 // =======================
@@ -86,8 +83,6 @@ export const getGroups = async (
         .where('organizationId', '==', orgId)
         .withConverter(groupConverter)
         .get();
-
-    cacheTag(`groups-org-${orgId}`);
 
     return snapshot.docs.map(doc => doc.data());
 };
@@ -107,7 +102,6 @@ export const getGiveTakes = async (
         .withConverter(giveTakeConverter)
         .get();
 
-    cacheTag(`give-take-org-${orgId}`, `stats-org-${orgId}`);
     return snapshot.docs.map(doc => doc.data());
 };
 
@@ -160,7 +154,6 @@ export const getStats = async (orgId: string): Promise<Stats> => {
         .filter(e => e.type === 'take' && e.status !== 'settled')
         .reduce((s, e) => s + (e.amount - e.settledAmount), 0);
 
-    cacheTag(`stats-org-${orgId}`);
     return {
         currentBalance: totalIncome - totalExpense,
         totalIncome,
@@ -185,7 +178,6 @@ export const getGroupDetails = async (
         .withConverter(groupConverter)
         .get();
 
-    cacheTag(`group-${groupId}`);
     return doc.exists ? doc.data() ?? null : null;
 };
 
@@ -203,7 +195,6 @@ export const getUserOrganizations = async (
         .where('ownerId', '==', userId)
         .get();
 
-    cacheTag(`orgs-user-${userId}`);
     return snapshot.docs.map(
         doc => ({ id: doc.id, ...doc.data() } as Organization)
     );

@@ -7,8 +7,9 @@ import { useAuth } from "@/contexts/AuthContext"
 import { Button } from "@/components/ui/button"
 import { Trash2, Building2, Pencil, Check, X } from "lucide-react"
 import { Input } from "@/components/ui/input"
-import { toast } from "sonner"
 import { ConfirmDialog } from "./confirm-dialog"
+import { useUpdateOrganization, useDeleteOrganization } from "@/services/organizations.service"
+import { toast } from "sonner"
 
 interface ManageOrganizationsDialogProps {
     open: boolean
@@ -16,56 +17,59 @@ interface ManageOrganizationsDialogProps {
 }
 
 export function ManageOrganizationsDialog({ open, onOpenChange }: ManageOrganizationsDialogProps) {
-    const { organizations } = useOrganization()
+    const { organizations, currentOrg } = useOrganization()
     const { user } = useAuth()
-    const [deletingId, setDeletingId] = useState<string | null>(null)
     const [confirmId, setConfirmId] = useState<string | null>(null)
     const [editingId, setEditingId] = useState<string | null>(null)
     const [editName, setEditName] = useState("")
-    const [isUpdating, setIsUpdating] = useState(false)
+    const updateMutation = useUpdateOrganization()
+    const deleteMutation = useDeleteOrganization()
 
-    async function handleDelete() {
+    function handleDelete() {
         if (!user || !confirmId) return;
-        setDeletingId(confirmId);
 
-        try {
-            const { deleteOrganization } = await import("@/app/actions/db-actions");
-            const result = await deleteOrganization(confirmId, user.uid);
-
-            if (result.success) {
-                toast.success("Organization deleted");
-                window.location.reload();
-            } else {
-                toast.error(result.error || "Failed to delete organization");
-            }
-        } catch (error) {
-            console.error("Delete failed", error);
-            toast.error("Something went wrong");
-        } finally {
-            setDeletingId(null);
+        // Prevent deleting current organization
+        if (currentOrg?.id === confirmId) {
+            toast.error("Cannot delete the currently active organization. Switch to a different organization first.");
             setConfirmId(null);
+            return;
         }
+
+        deleteMutation.mutate({
+            id: confirmId,
+            userId: user.uid,
+        }, {
+            onSuccess: () => {
+                setConfirmId(null);
+                toast.success("Organization deleted successfully");
+            },
+            onError: () => {
+                toast.error("Failed to delete organization");
+            }
+        });
     }
 
-    async function handleUpdateName(orgId: string) {
+    function handleUpdateName(orgId: string) {
         if (!user || !editName.trim()) return;
-        setIsUpdating(true);
-        try {
-            const { updateOrganization } = await import("@/app/actions/db-actions");
-            const result = await updateOrganization(orgId, { name: editName }, user.uid);
 
-            if (result.success) {
-                toast.success("Organization updated");
-                window.location.reload();
-            } else {
-                toast.error(result.error || "Failed to update");
-            }
-        } catch (error) {
-            toast.error("Something went wrong");
-        } finally {
-            setIsUpdating(false);
+        if (editName === organizations.find(o => o.id === orgId)?.name) {
             setEditingId(null);
+            return;
         }
+
+        updateMutation.mutate({
+            id: orgId,
+            data: { name: editName },
+            userId: user.uid,
+        }, {
+            onSuccess: () => {
+                setEditingId(null);
+                toast.success("Organization name updated");
+            },
+            onError: () => {
+                toast.error("Failed to update organization name");
+            }
+        });
     }
 
     return (
@@ -92,19 +96,18 @@ export function ManageOrganizationsDialog({ open, onOpenChange }: ManageOrganiza
                                                     value={editName}
                                                     onChange={(e) => setEditName(e.target.value)}
                                                     className="h-7 text-sm"
-                                                    disabled={isUpdating}
+                                                    disabled={updateMutation.isPending}
                                                 />
-                                                <Button size="icon" variant="ghost" className="h-7 w-7 shrink-0 text-emerald-500" onClick={() => handleUpdateName(org.id)} disabled={isUpdating}>
+                                                <Button size="icon" variant="ghost" className="h-7 w-7 shrink-0 text-emerald-500" onClick={() => handleUpdateName(org.id)} disabled={updateMutation.isPending}>
                                                     <Check className="h-4 w-4" />
                                                 </Button>
-                                                <Button size="icon" variant="ghost" className="h-7 w-7 shrink-0" onClick={() => setEditingId(null)} disabled={isUpdating}>
+                                                <Button size="icon" variant="ghost" className="h-7 w-7 shrink-0" onClick={() => setEditingId(null)} disabled={updateMutation.isPending}>
                                                     <X className="h-4 w-4" />
                                                 </Button>
                                             </div>
                                         ) : (
                                             <>
                                                 <span className="font-medium truncate">{org.name}</span>
-                                                <span className="text-xs text-muted-foreground">{org.isPersonal ? 'Personal' : 'Workspace'}</span>
                                             </>
                                         )}
                                     </div>
@@ -125,11 +128,7 @@ export function ManageOrganizationsDialog({ open, onOpenChange }: ManageOrganiza
                                         </Button>
                                     )}
 
-                                    {org.isPersonal ? (
-                                        <Button variant="ghost" size="icon" disabled className="opacity-50">
-                                            <Trash2 className="size-4 text-muted-foreground" />
-                                        </Button>
-                                    ) : (
+                                    {org.isPersonal ? null : (
                                         <Button
                                             variant="ghost"
                                             size="icon"
@@ -159,7 +158,7 @@ export function ManageOrganizationsDialog({ open, onOpenChange }: ManageOrganiza
                 title="Delete Organization?"
                 description="This will permanently delete this organization and its data. This action cannot be undone."
                 onConfirm={handleDelete}
-                loading={!!deletingId}
+                loading={deleteMutation.isPending}
                 confirmText="Delete it"
                 variant="destructive"
             />

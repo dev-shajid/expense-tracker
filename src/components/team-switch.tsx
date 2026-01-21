@@ -26,6 +26,11 @@ import { Input } from "./ui/input"
 import { toast } from "sonner"
 import { useOrganization } from "@/contexts/OrganizationContext"
 import { useAuth } from "@/contexts/AuthContext"
+import { Loader2 } from "lucide-react"
+import { Skeleton } from "./ui/skeleton"
+import { User } from "firebase/auth"
+import { useCreateOrganization } from "@/services/organizations.service"
+import { useRouter } from "next/navigation"
 
 const formSchema = z.object({
     name: z.string().min(2, {
@@ -33,7 +38,7 @@ const formSchema = z.object({
     }),
 })
 
-export function TeamSwitcher({user}:{user: User | null}) {
+export function TeamSwitcher({ user }: { user: User | null }) {
     const { currentOrg, setCurrentOrg, organizations } = useOrganization()
     const [open, setOpen] = React.useState(false)
 
@@ -70,7 +75,6 @@ export function TeamSwitcher({user}:{user: User | null}) {
                         <DropdownMenuItem
                             key={org.id}
                             onClick={async () => {
-                                await revalidateAllTags(currentOrg.id, user?.uid || '');
                                 setCurrentOrg(org)
                             }}
                             className="gap-2 cursor-pointer"
@@ -102,15 +106,10 @@ export function TeamSwitcher({user}:{user: User | null}) {
     )
 }
 
-
-import { Loader2 } from "lucide-react"
-import { Skeleton } from "./ui/skeleton"
-import { User } from "firebase/auth"
-import { revalidateAllTags } from "@/app/actions/db-actions"
-
 function NewOrganizationModal({ open, onOpenChange }: { open: boolean, onOpenChange: (open: boolean) => void }) {
     const { user } = useAuth(); // Need to import this at top level
-    const [isLoading, setIsLoading] = React.useState(false);
+    const createOrganization = useCreateOrganization()
+    const router = useRouter();
 
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
@@ -121,38 +120,29 @@ function NewOrganizationModal({ open, onOpenChange }: { open: boolean, onOpenCha
 
     async function onSubmit(values: z.infer<typeof formSchema>) {
         if (!user) return;
-        setIsLoading(true);
 
-        try {
-            const { createOrganization } = await import("@/app/actions/db-actions");
+        const newOrg = {
+            name: values.name,
+            currency: 'BDT',
+            ownerId: user.uid
+        };
 
-            const newOrg = {
-                name: values.name,
-                currency: 'BDT',
-                ownerId: user.uid
-            };
-
-            const result = await createOrganization(newOrg);
-
-            if (result.success) {
+        createOrganization.mutate(newOrg, {
+            onSuccess: (data) => {
                 toast.success("Organization Created", {
                     description: `Workspace "${values.name}" is ready.`
                 })
                 onOpenChange(false)
                 form.reset()
-                window.location.reload(); // Refresh to pick up new org in context
-            } else {
+                router.refresh(); // Refresh to pick up new org in context
+            },
+            onError: () => {
                 toast.error("Failed to create organization");
             }
-        } catch (error) {
-            console.error(error);
-            toast.error("Something went wrong.");
-        } finally {
-            setIsLoading(false);
-        }
+        });
     }
     return (
-        <Dialog open={open} onOpenChange={(val) => !isLoading && onOpenChange(val)}>
+        <Dialog open={open} onOpenChange={(val) => !createOrganization.isPending && onOpenChange(val)}>
             <DialogContent className="sm:max-w-md">
                 <DialogHeader>
                     <DialogTitle>Add New Organization</DialogTitle>
@@ -169,14 +159,14 @@ function NewOrganizationModal({ open, onOpenChange }: { open: boolean, onOpenCha
                                 <FormItem>
                                     <FormLabel>Organization Name</FormLabel>
                                     <FormControl>
-                                        <Input disabled={isLoading} placeholder="My Business" {...field} />
+                                        <Input disabled={createOrganization.isPending} placeholder="My Business" {...field} />
                                     </FormControl>
                                     <FormMessage />
                                 </FormItem>
                             )}
                         />
-                        <Button type="submit" disabled={isLoading}>
-                            {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                        <Button type="submit" disabled={createOrganization.isPending}>
+                            {createOrganization.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                             Create Organization
                         </Button>
                     </form>

@@ -1,7 +1,6 @@
 "use client"
 
 import { useOrganization } from "@/contexts/OrganizationContext"
-import { getOrgStats } from "@/lib/store"
 import { OverviewCards } from "@/components/dashboard/overview-cards"
 import { ArrowLeftRight, CreditCard, Plus, Users } from "lucide-react"
 import Link from "next/link"

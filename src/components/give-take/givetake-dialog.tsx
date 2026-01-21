@@ -27,6 +27,8 @@ import { toast } from "sonner"
 import { useState, useEffect } from "react"
 import { useOrganization } from "@/contexts/OrganizationContext"
 import { GiveTakeRecord } from "@/types"
+import { useCreateGiveTake, useUpdateGiveTake } from "@/services/give-take.service"
+import { Loader2 } from "lucide-react"
 
 const formSchema = z.object({
     personName: z.string().min(2, "Person name is required"),
@@ -46,10 +48,19 @@ interface GiveTakeDialogProps {
 export function GiveTakeDialog({ children, record, open: controlledOpen, onOpenChange }: GiveTakeDialogProps) {
     const [internalOpen, setInternalOpen] = useState(false)
     const { currentOrg } = useOrganization()
+    const createMutation = useCreateGiveTake()
+    const updateMutation = useUpdateGiveTake()
+
+    const isLoading = createMutation.isPending || updateMutation.isPending
 
     const isControlled = controlledOpen !== undefined;
     const open = isControlled ? controlledOpen : internalOpen;
-    const setOpen = isControlled ? onOpenChange! : setInternalOpen;
+    const setOpen = (val: boolean) => {
+        if (!isLoading) {
+            if (isControlled) onOpenChange!(val);
+            else setInternalOpen(val);
+        }
+    };
 
     const isEdit = !!record;
 
@@ -86,6 +97,8 @@ export function GiveTakeDialog({ children, record, open: controlledOpen, onOpenC
     }, [open, record, form])
 
     async function onSubmit(values: z.infer<typeof formSchema>) {
+        if (isLoading) return;
+
         const payload = {
             personName: values.personName,
             amount: Number(values.amount),
@@ -98,25 +111,23 @@ export function GiveTakeDialog({ children, record, open: controlledOpen, onOpenC
             createdAt: new Date().toISOString()
         };
 
-        let result;
         if (isEdit && record) {
-            const { updateGiveTake } = await import("@/app/actions/db-actions");
-            result = await updateGiveTake(record.id, payload, currentOrg!.id);
+            updateMutation.mutate({
+                id: record.id,
+                data: payload,
+                orgId: currentOrg!.id,
+            }, {
+                onSuccess: () => {
+                    setOpen(false)
+                },
+            });
         } else {
-            const { createGiveTake } = await import("@/app/actions/db-actions");
-            result = await createGiveTake(payload);
-        }
-
-        if (result.success) {
-            toast.success(isEdit ? "Record Updated" : "Record Added", {
-                description: `${isEdit ? 'Updated' : 'Added'} ${values.type} record for ${values.personName}`,
-            })
-            setOpen(false)
-            if (!isEdit) form.reset()
-        } else {
-            toast.error("Operation failed", {
-                description: JSON.stringify(result)
-            })
+            createMutation.mutate(payload, {
+                onSuccess: () => {
+                    setOpen(false)
+                    form.reset()
+                },
+            });
         }
     }
 
@@ -244,7 +255,10 @@ export function GiveTakeDialog({ children, record, open: controlledOpen, onOpenC
                         />
 
                         <DialogFooter>
-                            <Button type="submit">{isEdit ? "Update Changes" : "Save Record"}</Button>
+                            <Button type="submit" disabled={isLoading}>
+                                {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                                {isEdit ? "Update Changes" : "Save Record"}
+                            </Button>
                         </DialogFooter>
                     </form>
                 </Form>

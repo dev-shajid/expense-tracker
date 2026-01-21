@@ -31,13 +31,6 @@ export async function createExpense(
             .collection('expenses')
             .add(data);
 
-        revalidateTag(`expenses-org-${data.organizationId}`, {});
-        revalidateTag(`stats-org-${data.organizationId}`, {});
-
-        if (data.groupId) {
-            revalidateTag(`expenses-group-${data.groupId}`, {});
-        }
-
         return { success: true, id: docRef.id };
     } catch (error) {
         console.error(error);
@@ -57,17 +50,6 @@ export async function updateExpense(
             .doc(id)
             .update(data);
 
-        revalidateTag(`expenses-org-${orgId}`, {});
-        revalidateTag(`stats-org-${orgId}`, {});
-
-        if (oldGroupId) {
-            revalidateTag(`expenses-group-${oldGroupId}`, {});
-        }
-
-        if (data.groupId) {
-            revalidateTag(`expenses-group-${data.groupId}`, {});
-        }
-
         return { success: true };
     } catch (error) {
         console.error(error);
@@ -86,13 +68,6 @@ export async function deleteExpense(
             .doc(id)
             .delete();
 
-        revalidateTag(`expenses-org-${orgId}`, {});
-        revalidateTag(`stats-org-${orgId}`, {});
-
-        if (groupId) {
-            revalidateTag(`expenses-group-${groupId}`, {});
-        }
-
         return { success: true };
     } catch (error) {
         console.error(error);
@@ -103,7 +78,6 @@ export async function deleteExpense(
 export async function updateGroup(
     id: string,
     data: Partial<GroupExpense>,
-    orgId: string
 ) {
     try {
         await adminDb
@@ -111,10 +85,22 @@ export async function updateGroup(
             .doc(id)
             .update(data);
 
-        revalidateTag(`groups-org-${orgId}`, {});
-        revalidateTag(`group-${id}`, {});
-
         return { success: true };
+    } catch (error) {
+        console.error(error);
+        return { success: false };
+    }
+}
+
+export async function createGroup(
+    data: Omit<GroupExpense, 'id'>
+) {
+    try {
+        const docRef = await adminDb
+            .collection('groups')
+            .add(data);
+
+        return { success: true, id: docRef.id };
     } catch (error) {
         console.error(error);
         return { success: false };
@@ -130,13 +116,6 @@ export async function deleteGroup(
             .collection('groups')
             .doc(id)
             .delete();
-
-        // Also delete expenses associated with this group?
-        // For now, let's keep it simple, or un-assign them.
-        // Ideally we should handle expenses deletion or unlinking.
-        // Let's just delete the group for now. 
-
-        revalidateTag(`groups-org-${orgId}`, {});
         return { success: true };
     } catch (error) {
         console.error(error);
@@ -151,9 +130,6 @@ export async function createGiveTake(
         const docRef = await adminDb
             .collection('give_takes')
             .add(data);
-
-        revalidateTag(`give-take-org-${data.organizationId}`, {});
-        revalidateTag(`stats-org-${data.organizationId}`, {});
 
         return { success: true, id: docRef.id };
     } catch (error) {
@@ -173,9 +149,6 @@ export async function updateGiveTake(
             .collection('give_takes')
             .doc(id)
             .update(data);
-
-        revalidateTag(`give-take-org-${orgId}`, {});
-        revalidateTag(`stats-org-${orgId}`, {});
 
         return { success: true };
     } catch (error) {
@@ -200,8 +173,6 @@ export async function createOrganization(
         const docRef = await adminDb
             .collection('organizations')
             .add(payload);
-
-        revalidateTag(`orgs-user-${data.ownerId}`, {});
 
         return { success: true, id: docRef.id };
     } catch (error) {
@@ -243,7 +214,6 @@ export async function updateOrganization(
             .doc(id)
             .update(data);
 
-        revalidateTag(`orgs-user-${userId}`, {});
         return { success: true };
     } catch (error) {
         console.error(error);
@@ -283,7 +253,6 @@ export async function deleteOrganization(
             .doc(id)
             .delete();
 
-        revalidateTag(`orgs-user-${userId}`, {});
         return { success: true };
     } catch (error) {
         console.error(error);
@@ -322,6 +291,7 @@ export async function fetchGroupDetails(groupId: string) {
 export async function fetchUserOrganizations(userId: string) {
     return getUserOrganizations(userId);
 }
+
 
 
 export async function revalidateAllTags(orgId: string, userId: string) {

@@ -3,7 +3,12 @@
 
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { Organization } from '@/types';
-import { MOCK_ORGS } from '@/lib/store';
+import { useAuth } from '@/contexts/AuthContext';
+import { toast } from 'sonner';
+import { Skeleton } from '@/components/ui/skeleton';
+import { useUserOrganizations, useCreateOrganization } from '@/services/organizations.service';
+
+const OrganizationContext = createContext<OrganizationContextType | undefined>(undefined);
 
 interface OrganizationContextType {
     currentOrg: Organization | null;
@@ -11,75 +16,59 @@ interface OrganizationContextType {
     organizations: Organization[];
 }
 
-const OrganizationContext = createContext<OrganizationContextType | undefined>(undefined);
-
-
-// Re-implementing with imports:
-import { useAuth } from '@/contexts/AuthContext';
-import { fetchUserOrganizations, createOrganization } from '@/app/actions/db-actions';
-import { toast } from 'sonner';
-import { Skeleton } from '@/components/ui/skeleton';
-import { Loader2 } from 'lucide-react';
-
 export function OrganizationProvider({ children }: { children: React.ReactNode }) {
     const { user } = useAuth();
     const [currentOrg, setCurrentOrg] = useState<Organization | null>(null);
-    const [loading, setLoading] = useState(true);
-    const [organizations, setOrganizations] = useState<Organization[]>([]);
+    const [isCreatingDefault, setIsCreatingDefault] = useState(false);
+    const { data: orgs = [], isLoading } = useUserOrganizations(user?.uid || '');
+    const createOrgMutation = useCreateOrganization();
 
     useEffect(() => {
-        async function loadOrgs() {
-            if (!user) return;
-            setLoading(true);
-            try {
-                const orgs = await fetchUserOrganizations(user.uid);
+        if (!user || isLoading) return;
 
-                if (orgs.length === 0) {
-                    // Create default Personal organization
-                    const newOrg = {
-                        name: 'Personal',
-                        isPersonal: true,
-                        currency: 'BDT',
-                        ownerId: user.uid,
-                        createdAt: new Date().toISOString()
-                    };
-                    const result = await createOrganization(newOrg);
-                    if (result.success) {
-                        const createdOrg = { ...newOrg, id: result.id! };
-                        setOrganizations([createdOrg]);
-                        setCurrentOrg(createdOrg);
-                        toast.success("Welcome! Created your Personal workspace.");
-                    }
-                } else {
-                    // Sort orgs by createdAt asc (oldest first)
-                    const sortedOrgs = orgs.sort((a, b) => {
-                        const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
-                        const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
-                        return dateA - dateB;
-                    });
-                    setOrganizations(sortedOrgs);
-                    // Set cached org or default to first
-                    const lastOrgId = localStorage.getItem('lastOrgId');
-                    const found = orgs.find((o: Organization) => o.id === lastOrgId);
-                    setCurrentOrg(found || orgs[0]);
+        // Check if user has a personal organization
+        const hasPersonalOrg = orgs.some((org: Organization) => org.isPersonal);
+
+        if (orgs.length === 0 && !hasPersonalOrg && !isCreatingDefault) {
+            // Create default Personal organization only once
+            setIsCreatingDefault(true);
+            const newOrg = {
+                name: 'Personal',
+                isPersonal: true,
+                currency: 'BDT',
+                ownerId: user.uid,
+                createdAt: new Date().toISOString()
+            };
+            createOrgMutation.mutate(newOrg, {
+                onSuccess: () => {
+                    setIsCreatingDefault(false);
+                },
+                onError: () => {
+                    setIsCreatingDefault(false);
+                    toast.error('Failed to create default organization');
                 }
-            } catch (error) {
-                console.error("Failed to load organizations", error);
-            } finally {
-                setLoading(false);
-            }
+            });
+        } else if (orgs.length > 0 && !isCreatingDefault) {
+            // Sort orgs by createdAt asc (oldest first)
+            const sortedOrgs = [...orgs].sort((a, b) => {
+                const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+                const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+                return dateA - dateB;
+            });
+            // Set cached org or default to first
+            const lastOrgId = localStorage.getItem('lastOrgId');
+            const found = sortedOrgs.find((o: Organization) => o.id === lastOrgId);
+            setCurrentOrg(found || sortedOrgs[0]);
         }
-
-        loadOrgs();
-    }, [user]);
+    }, [user, orgs, isLoading]);
 
     const handleSetCurrentOrg = (org: Organization) => {
         setCurrentOrg(org);
         if (org?.id) localStorage.setItem('lastOrgId', org.id);
-        
+
     };
 
-    if (loading) {
+    if (isLoading && orgs.length === 0) {
         return (
             <div className="flex items-center justify-center h-screen">
                 <div className='space-y-4 max-w-80 w-full'>
@@ -92,7 +81,7 @@ export function OrganizationProvider({ children }: { children: React.ReactNode }
     }
 
     return (
-        <OrganizationContext.Provider value={{ currentOrg, setCurrentOrg: handleSetCurrentOrg, organizations }}>
+        <OrganizationContext.Provider value={{ currentOrg, setCurrentOrg: handleSetCurrentOrg, organizations: orgs }}>
             {children}
         </OrganizationContext.Provider>
     );

@@ -22,6 +22,7 @@ import { useState, useEffect } from "react"
 import { useOrganization } from "@/contexts/OrganizationContext"
 import { Loader2 } from "lucide-react"
 import { GroupExpense } from "@/types"
+import { useCreateGroup, useUpdateGroup } from "@/services/groups.service"
 
 const formSchema = z.object({
     title: z.string().min(2, "Title is required"),
@@ -38,8 +39,11 @@ interface GroupDialogProps {
 
 export function GroupDialog({ group, children, open: controlledOpen, onOpenChange, onSuccess }: GroupDialogProps) {
     const [internalOpen, setInternalOpen] = useState(false)
-    const [isLoading, setIsLoading] = useState(false)
     const { currentOrg } = useOrganization()
+    const createMutation = useCreateGroup()
+    const updateMutation = useUpdateGroup()
+
+    const isLoading = createMutation.isPending || updateMutation.isPending
 
     const isControlled = controlledOpen !== undefined;
     const open = isControlled ? controlledOpen : internalOpen;
@@ -83,53 +87,37 @@ export function GroupDialog({ group, children, open: controlledOpen, onOpenChang
 
     async function onSubmit(values: z.infer<typeof formSchema>) {
         if (isLoading) return;
-        setIsLoading(true);
 
-        try {
-            if (isEdit && group) {
-                const { updateGroup } = await import("@/app/actions/db-actions"); // Dynamic import
-                const result = await updateGroup(group.id, {
+        const payload: Omit<GroupExpense, "id"> = {
+            title: values.title,
+            description: values.description,
+            startDate: new Date().toISOString(),
+            totalAmount: 0,
+            organizationId: currentOrg!.id
+        };
+
+        if (isEdit && group) {
+            updateMutation.mutate({
+                id: group.id,
+                data: {
                     title: values.title,
                     description: values.description
-                }, currentOrg!.id);
-
-                if (result.success) {
-                    toast.success("Group Updated", {
-                        description: `Updated group ${values.title}`,
-                    })
+                },
+                orgId: currentOrg!.id,
+            }, {
+                onSuccess: () => {
                     setOpen(false)
                     if (onSuccess) onSuccess();
-                } else {
-                    toast.error("Failed to update group");
-                }
-            } else {
-                const { createGroup } = await import("@/app/actions/db-actions"); // Dynamic import
-                const payload = {
-                    title: values.title,
-                    description: values.description,
-                    startDate: new Date().toISOString(),
-                    totalAmount: 0,
-                    organizationId: currentOrg!.id
-                };
-
-                const result = await createGroup(payload);
-
-                if (result.success) {
-                    toast.success("Group Created", {
-                        description: `Created group ${values.title}`,
-                    })
+                },
+            });
+        } else {
+            createMutation.mutate(payload, {
+                onSuccess: () => {
                     setOpen(false)
-                    form.reset() // Only reset on create success usually, edit might keep form if we want? But closing dialog.
+                    form.reset()
                     if (onSuccess) onSuccess();
-                } else {
-                    toast.error("Failed to create group");
-                }
-            }
-        } catch (e) {
-            console.error(e);
-            toast.error("Something went wrong");
-        } finally {
-            setIsLoading(false);
+                },
+            });
         }
     }
 

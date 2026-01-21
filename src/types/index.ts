@@ -29,7 +29,6 @@ export interface GroupExpense {
     startDate: string;
     endDate?: string;
     totalAmount: number;
-    items: Expense[];
     organizationId: string;
 }
 

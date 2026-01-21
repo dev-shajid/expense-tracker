@@ -1,6 +1,7 @@
 "use client"
 
 import Link from "next/link"
+import { usePathname } from "next/navigation"
 import { ArrowLeftRight, CircleDollarSign, FolderDown, LayoutDashboard, Moon, Sun } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Button, buttonVariants } from "@/components/ui/button"
@@ -21,13 +22,14 @@ const DATA = [
     { href: "/give-take", icon: ArrowLeftRight, label: "Give/Take" },
 ]
 
-
 export default function DockMenu() {
     const { setTheme, theme } = useTheme()
+    const pathname = usePathname()
 
-    return (
+    // Desktop version with dock and tooltips
+    const DesktopNav = () => (
         <TooltipProvider>
-            <Dock direction="middle" className="fixed bottom-5 left-1/2 -translate-x-1/2">
+            <Dock direction="middle" className="fixed bottom-5 left-1/2 -translate-x-1/2 hidden md:flex">
                 {DATA.map((item) => (
                     <DockIcon key={item.label}>
                         <Tooltip>
@@ -70,5 +72,55 @@ export default function DockMenu() {
                 </DockIcon>
             </Dock>
         </TooltipProvider>
+    )
+
+    // Mobile version with native bottom navigation style
+    const MobileNav = () => (
+        <nav className="fixed bottom-0 left-0 right-0 flex md:hidden bg-background border-t border-border">
+            <div className="flex w-full items-center justify-around">
+                {DATA.map((item) => {
+                    const isActive = pathname === item.href
+                    return (
+                        <Link
+                            key={item.label}
+                            href={item.href}
+                            className={cn(
+                                "flex flex-col items-center justify-center gap-1 py-2 px-3 flex-1 transition-colors",
+                                isActive
+                                    ? "text-primary"
+                                    : "text-muted-foreground hover:text-foreground"
+                            )}
+                        >
+                            <item.icon className="size-5" />
+                            <span className="text-xs font-medium text-center">{item.label}</span>
+                        </Link>
+                    )
+                })}
+                <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => setTheme(theme === "light" ? "dark" : "light")}
+                    className={cn(
+                        "flex flex-col items-center justify-center gap-1 py-2 px-3 flex-1 transition-colors",
+                        "text-muted-foreground hover:text-foreground"
+                    )}
+                >
+                    {
+                        theme === "light" ?
+                        <Moon className="size-5" /> :
+                        <Sun className="size-5" />
+
+                    }
+                    <span className="text-xs font-medium">Theme</span>
+                </Button>
+            </div>
+        </nav>
+    )
+
+    return (
+        <>
+            <DesktopNav />
+            <MobileNav />
+        </>
     )
 }

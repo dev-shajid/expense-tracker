@@ -3,66 +3,44 @@
 
 import { useOrganization } from "@/contexts/OrganizationContext"
 import { Button } from "@/components/ui/button"
-import { ArrowLeft, Calendar, Delete, Edit, EllipsisVertical, Plus, Search } from "lucide-react"
+import { ArrowLeft, Calendar, Delete, Edit, EllipsisVertical, Plus } from "lucide-react"
 import { useRouter, useParams } from "next/navigation"
 import { ExpensesList } from "@/components/expenses/expenses-list"
 import { format } from "date-fns"
 import { Badge } from "@/components/ui/badge"
 import { ExpenseDialog } from "@/components/expenses/expense-dialog"
-import { useEffect, useState } from "react"
-import { Expense, GroupExpense } from "@/types"
-import { fetchExpensesForGroup, fetchGroupDetails } from "@/app/actions/db-actions"
-import { formatCurrency } from "@/lib/store"
+import { useState } from "react"
+import { formatCurrency } from "@/lib/utils"
 import { cn } from "@/lib/utils"
 import { Skeleton } from "@/components/ui/skeleton"
 import { ExpensesListSkeleton } from "@/components/skeletons"
 import { GroupDialog } from "@/components/groups/create-group-dialog"
 import { ConfirmDialog } from "@/components/confirm-dialog"
-import { deleteGroup } from "@/app/actions/db-actions"
-import { toast } from "sonner"
 
 import {
     DropdownMenu,
     DropdownMenuContent,
     DropdownMenuItem,
-    DropdownMenuLabel,
-    DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { useDeleteGroup, useGroupDetails, useUpdateGroup } from "@/services/groups.service"
+import { useExpensesForGroup } from "@/services/expenses.service"
 
 export default function GroupDetailsPage() {
     const router = useRouter()
     const params = useParams()
     const { currentOrg } = useOrganization()
 
-    const [group, setGroup] = useState<GroupExpense | null>(null)
-    const [expenses, setExpenses] = useState<Expense[]>([])
-    const [loading, setLoading] = useState(true)
     const [editDialogOpen, setEditDialogOpen] = useState(false)
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
     const [actionLoading, setActionLoading] = useState(false)
 
     const groupId = params.groupId as string
 
-    const fetchGroupData = async () => {
-        if (!groupId) return;
-        try {
-            const [groupData, expensesData] = await Promise.all([
-                fetchGroupDetails(groupId),
-                fetchExpensesForGroup(groupId)
-            ]);
-            setGroup(groupData);
-            setExpenses(expensesData);
-        } catch (error) {
-            console.error("Failed to load group details:", error);
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    useEffect(() => {
-        fetchGroupData();
-    }, [groupId]);
+    const {data: group, isLoading: groupLoading, refetch: refetchGroupDetails} = useGroupDetails(groupId)
+    const {data: expenses, isLoading: expensesLoading, refetch: refetchExpenses} = useExpensesForGroup(groupId)
+    const updateGroup = useUpdateGroup();
+    const deleteGroup = useDeleteGroup();
 
     const handleEditGroup = () => {
         setEditDialogOpen(true)
@@ -70,22 +48,15 @@ export default function GroupDetailsPage() {
 
     const handleDeleteGroup = async () => {
         if (!group || !currentOrg) return;
-        setActionLoading(true)
-        try {
-            const result = await deleteGroup(group.id, currentOrg.id)
-            if (result.success) {
-                toast.success("Group deleted")
-                router.push('/groups')
-            } else {
-                toast.error("Failed to delete group")
+        deleteGroup.mutate({
+            id: group.id,
+            orgId: currentOrg.id,
+        },{
+            onSettled: () => {
+                setActionLoading(false)
+                setDeleteDialogOpen(false)
             }
-        } catch (e) {
-            toast.error("Something went wrong")
-            console.error(e)
-        } finally {
-            setActionLoading(false)
-            setDeleteDialogOpen(false)
-        }
+        });
     }
 
     return (
@@ -118,12 +89,12 @@ export default function GroupDetailsPage() {
 
                 <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
                     <div className="space-y-2">
-                        {!loading ? <h1 className="text-3xl font-bold tracking-tight">{group?.title}</h1> : <Skeleton className="h-8 w-64" />}
-                        {!loading ? <p className="text-muted-foreground mt-1">{group?.description}</p> : <Skeleton className="h-4 w-32" />}
+                        {!groupLoading ? <h1 className="text-3xl font-bold tracking-tight">{group?.title}</h1> : <Skeleton className="h-8 w-64" />}
+                        {!groupLoading ? <p className="text-muted-foreground mt-1">{group?.description}</p> : <Skeleton className="h-4 w-32" />}
                         <div className="flex items-center gap-4 text-sm text-muted-foreground">
                             <div className="flex items-center gap-1">
                                 <Calendar className="h-4 w-4" />
-                                {!loading ? group?.startDate && <span>{format(new Date(group?.startDate), 'MMM d, yyyy')}</span> : <Skeleton className="h-4 w-20" />}
+                                {!groupLoading ? group?.startDate && <span>{format(new Date(group?.startDate), 'MMM d, yyyy')}</span> : <Skeleton className="h-4 w-20" />}
                             </div>
                             <Badge variant="secondary">Active</Badge>
                         </div>
@@ -131,9 +102,9 @@ export default function GroupDetailsPage() {
 
 
                     <div className="flex md:items-end items-center justify-between md:justify-end md:flex-col gap-4">
-                        {!loading ? (() => {
-                            const income = expenses.filter(e => e.type === 'income').reduce((acc, curr) => acc + curr.amount, 0);
-                            const expense = expenses.filter(e => e.type === 'expense').reduce((acc, curr) => acc + curr.amount, 0);
+                        {!groupLoading && !expensesLoading ? (() => {
+                            const income = expenses?.filter(e => e.type === 'income').reduce((acc, curr) => acc + curr.amount, 0) ?? 0;
+                            const expense = expenses?.filter(e => e.type === 'expense').reduce((acc, curr) => acc + curr.amount, 0) ?? 0;
                             const total = income - expense;
                             const isPositive = total >= 0;
 
@@ -145,7 +116,10 @@ export default function GroupDetailsPage() {
                                 </div>
                             )
                         })() : <Skeleton className="h-8 w-40" />}
-                        <ExpenseDialog defaultGroupId={groupId} onSuccess={fetchGroupData}>
+                        <ExpenseDialog defaultGroupId={groupId} onSuccess={() => {
+                            refetchExpenses();
+                            refetchGroupDetails();
+                        }}>
                             <Button size='sm'>
                                 <Plus className="mr-2 h-4 w-4" /> Add Group Expense
                             </Button>
@@ -159,7 +133,10 @@ export default function GroupDetailsPage() {
                 {/* Expenses List - Full Width since members/stats are gone */}
                 <div className="space-y-6">
                     <h2 className="text-lg font-semibold">Transaction History</h2>
-                    {!loading ? <ExpensesList expenses={expenses} groups={group ? [group] : []} showGroupBadge={false} onUpdate={fetchGroupData} /> : <ExpensesListSkeleton />}
+                    {!expensesLoading ? <ExpensesList expenses={expenses || []} groups={group ? [group] : []} showGroupBadge={false} onUpdate={() => {
+                        refetchExpenses();
+                        refetchGroupDetails();
+                    }} /> : <ExpensesListSkeleton />}
                 </div>
             </div>
 
@@ -170,7 +147,7 @@ export default function GroupDetailsPage() {
                         open={editDialogOpen}
                         onOpenChange={setEditDialogOpen}
                         onSuccess={() => {
-                            fetchGroupData()
+                            refetchGroupDetails();
                             setEditDialogOpen(false)
                         }}
                     />

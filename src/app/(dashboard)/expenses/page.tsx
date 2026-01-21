@@ -4,42 +4,22 @@ import { useOrganization } from "@/contexts/OrganizationContext"
 import { OverviewCards } from "@/components/dashboard/overview-cards"
 import { ExpensesList } from "@/components/expenses/expenses-list"
 import { ExpenseDialog } from "@/components/expenses/expense-dialog"
-import { useEffect, useState } from "react"
-import { fetchExpenses, fetchStats, fetchGroups } from "@/app/actions/db-actions"
-import { Expense, Stats, GroupExpense } from "@/types"
-import { Skeleton } from "@/components/ui/skeleton"
-import { toast } from "sonner"
 import { ExpensesListSkeleton } from "@/components/skeletons"
+import { useExpenses } from "@/services/expenses.service"
+import { useGroups } from "@/services/groups.service"
 
 export default function ExpensesPage() {
   const { currentOrg } = useOrganization()
-  const [expenses, setExpenses] = useState<Expense[]>([])
-  const [groups, setGroups] = useState<GroupExpense[]>([])
-  const [loading, setLoading] = useState(true)
 
-  async function loadData() {
-    if (!currentOrg) return;
-    // Don't set loading to true for background refresh to avoid flickering unless it's initial
-    if (expenses.length === 0) setLoading(true);
+  const {data: expenses, isLoading: expensesLoading, refetch: refetchExpenses} = useExpenses(currentOrg?.id!);
+  const {data: groups, isLoading: groupsLoading, refetch: refetchGroups} = useGroups(currentOrg?.id!);
 
-    try {
-      const [fetchedExpenses, fetchedGroups] = await Promise.all([
-        fetchExpenses(currentOrg.id),
-        fetchGroups(currentOrg.id)
-      ]);
-      setExpenses(fetchedExpenses);
-      setGroups(fetchedGroups);
-    } catch (error) {
-      console.error("Failed to load expenses:", error);
-    } finally {
-      setLoading(false);
-    }
+  const onSuccess = () => {
+    refetchExpenses();
+    refetchGroups();
   }
 
-  useEffect(() => {
-    loadData();
-  }, [currentOrg]);
-
+  const loading = expensesLoading || groupsLoading;
   return (
     <div className="space-y-6 pb-24">
       {/* Header section with Title and Add Button */}
@@ -51,7 +31,7 @@ export default function ExpensesPage() {
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <ExpenseDialog onSuccess={loadData} />
+          <ExpenseDialog onSuccess={onSuccess} />
         </div>
       </div>
 
@@ -64,9 +44,9 @@ export default function ExpensesPage() {
           <h2 className="text-lg font-semibold">Recent Transactions</h2>
         </div>
         {
-          loading ?
+          loading || !expenses ?
             <ExpensesListSkeleton /> :
-            <ExpensesList expenses={expenses} groups={groups} onUpdate={loadData} />
+            <ExpensesList expenses={expenses} groups={groups} onUpdate={onSuccess} />
         }
       </div>
     </div>

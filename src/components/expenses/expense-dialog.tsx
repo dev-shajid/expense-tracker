@@ -29,8 +29,10 @@ import { useState, useEffect } from "react"
 import { useOrganization } from "@/contexts/OrganizationContext"
 import { Expense, GroupExpense } from "@/types"
 import { useRouter } from "next/navigation"
-import { fetchGroups } from "@/app/actions/db-actions"
 import { ConfirmDialog } from "@/components/confirm-dialog"
+import { Loader2 } from "lucide-react"
+import { useCreateExpense, useUpdateExpense, useDeleteExpense } from "@/services/expenses.service"
+import { useGroups } from "@/services/groups.service"
 
 const formSchema = z.object({
     amount: z.string().min(1, "Amount is required"),
@@ -41,9 +43,6 @@ const formSchema = z.object({
     groupId: z.string().optional(),
 })
 
-import { Loader2 } from "lucide-react"
-
-// ... imports remain the same
 
 interface ExpenseDialogProps {
     children?: React.ReactNode;
@@ -57,21 +56,26 @@ interface ExpenseDialogProps {
 export function ExpenseDialog({ children, expense, defaultGroupId, open: controlledOpen, onOpenChange, onSuccess }: ExpenseDialogProps) {
     const [internalOpen, setInternalOpen] = useState(false)
     const { currentOrg } = useOrganization()
-    const [isLoading, setIsLoading] = useState(false)
-    const [groups, setGroups] = useState<GroupExpense[]>([])
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
-    const [actionLoading, setActionLoading] = useState(false)
 
     const router = useRouter()
 
     const isControlled = controlledOpen !== undefined;
     const open = isControlled ? controlledOpen : internalOpen;
     const setOpen = (val: boolean) => {
-        if (!isLoading) {
+        if (!createMutation.isPending && !updateMutation.isPending && !deleteMutation.isPending) {
             if (isControlled) onOpenChange!(val);
             else setInternalOpen(val);
         }
     }
+
+    // Queries and Mutations
+    const { data: groups = [] } = useGroups(currentOrg?.id || '')
+    const createMutation = useCreateExpense()
+    const updateMutation = useUpdateExpense()
+    const deleteMutation = useDeleteExpense()
+
+    const isLoading = createMutation.isPending || updateMutation.isPending
 
     const isEdit = !!expense;
 
@@ -89,11 +93,6 @@ export function ExpenseDialog({ children, expense, defaultGroupId, open: control
 
     useEffect(() => {
         if (open) {
-            // Load groups
-            if (currentOrg) {
-                fetchGroups(currentOrg.id).then(setGroups).catch(console.error);
-            }
-
             if (expense) {
                 form.reset({
                     amount: expense.amount.toString(),
@@ -114,80 +113,62 @@ export function ExpenseDialog({ children, expense, defaultGroupId, open: control
                 })
             }
         }
-    }, [open, expense, form, currentOrg, defaultGroupId])
+    }, [open, expense, form, defaultGroupId])
 
     async function handleDeleteExpense() {
         if (!expense || !currentOrg) return;
-        setActionLoading(true);
-        try {
-            const { deleteExpense } = await import("@/app/actions/db-actions"); // Dynamic import to avoid circular dep if any, or just consistent
-            const result = await deleteExpense(expense.id, currentOrg.id, expense.groupId);
 
-            if (result.success) {
-                toast.success("Transaction Deleted");
+        deleteMutation.mutate({
+            id: expense.id,
+            orgId: currentOrg.id,
+            groupId: expense.groupId,
+        }, {
+            onSuccess: () => {
                 setOpen(false)
                 if (onSuccess) {
                     onSuccess();
-                } else {
-                    router.refresh();
                 }
-            } else {
-                toast.error("Failed to delete transaction");
-            }
-        } catch (error) {
-            console.error(error);
-            toast.error("Something went wrong");
-        } finally {
-            setActionLoading(false);
-            setDeleteDialogOpen(false);
-        }
+                setDeleteDialogOpen(false);
+            },
+        });
     }
 
     async function onSubmit(values: z.infer<typeof formSchema>) {
         if (isLoading) return;
-        setIsLoading(true);
 
-        try {
-            const payload = {
-                amount: Number(values.amount),
-                category: values.category,
-                type: values.type as any,
-                date: values.date.toISOString(),
-                notes: values.notes,
-                groupId: values.groupId === "none" ? undefined : values.groupId,
-                organizationId: currentOrg!.id
-            };
+        const payload = {
+            amount: Number(values.amount),
+            category: values.category,
+            type: values.type as any,
+            date: values.date.toISOString(),
+            notes: values.notes,
+            groupId: values.groupId === "none" ? undefined : values.groupId,
+            organizationId: currentOrg!.id
+        };
 
-            let result;
-            if (isEdit && expense) {
-                const { updateExpense } = await import("@/app/actions/db-actions");
-                result = await updateExpense(expense.id, payload, currentOrg!.id);
-            } else {
-                const { createExpense } = await import("@/app/actions/db-actions");
-                result = await createExpense(payload);
-            }
-
-            if (result.success) {
-                toast.success(isEdit ? "Transaction Updated" : "Transaction Created", {
-                    description: `${isEdit ? 'Updated' : 'Added'} ${values.type} of ${values.amount} for ${values.category}`,
-                })
-                if (isEdit) form.reset()
-                if (onSuccess) {
-                    onSuccess();
-                } else {
-                    router.refresh();
-                }
-                setOpen(false)
-            } else {
-                toast.error("Operation failed", {
-                    description: JSON.stringify(result),
-                })
-            }
-        } catch (error) {
-            console.error(error);
-            toast.error("Something went wrong");
-        } finally {
-            setIsLoading(false);
+        if (isEdit && expense) {
+            updateMutation.mutate({
+                id: expense.id,
+                data: payload,
+                orgId: currentOrg!.id,
+                oldGroupId: expense.groupId,
+            }, {
+                onSuccess: () => {
+                    if (onSuccess) {
+                        onSuccess();
+                    }
+                    setOpen(false)
+                },
+            });
+        } else {
+            createMutation.mutate(payload, {
+                onSuccess: () => {
+                    if (onSuccess) {
+                        onSuccess();
+                    }
+                    setOpen(false)
+                },
+            });
         }
     }
 
@@ -372,7 +353,7 @@ export function ExpenseDialog({ children, expense, defaultGroupId, open: control
                 title="Delete Transaction"
                 description="Are you sure you want to delete this transaction? This action cannot be undone."
                 onConfirm={handleDeleteExpense}
-                loading={actionLoading}
+                loading={deleteMutation.isPending}
                 confirmText="Delete"
                 variant="destructive"
             />
