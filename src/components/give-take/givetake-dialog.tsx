@@ -144,7 +144,7 @@ export function GiveTakeDialog({ children, record, open: controlledOpen, onOpenC
                 <DialogHeader>
                     <DialogTitle>{isEdit ? "Edit Record" : "Add Give/Take Record"}</DialogTitle>
                     <DialogDescription>
-                        {isEdit ? "Update details for this transaction." : "Track money you lent or borrowed."}
+                        {isEdit ? "Update details for this transaction." : "Track money you need to take or give in the future."}
                     </DialogDescription>
                 </DialogHeader>
                 <Form {...form}>
@@ -163,8 +163,8 @@ export function GiveTakeDialog({ children, record, open: controlledOpen, onOpenC
                                             </SelectTrigger>
                                         </FormControl>
                                         <SelectContent>
-                                            <SelectItem value="give">Give (Lend)</SelectItem>
-                                            <SelectItem value="take">Take (Borrow)</SelectItem>
+                                            <SelectItem value="take">Take (Receive Future)</SelectItem>
+                                            <SelectItem value="give">Give (Pay Future)</SelectItem>
                                         </SelectContent>
                                     </Select>
                                     <FormMessage />

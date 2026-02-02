@@ -11,17 +11,21 @@ import { format } from "date-fns"
 import { useGiveTakes } from "@/services/give-take.service"
 import { GiveTakeListSkeleton } from "@/components/skeletons"
 
+import { SettleDialog } from "@/components/give-take/settle-dialog"
+
 export default function GiveTakePage() {
   const { currentOrg } = useOrganization()
 
   const { data: records, isLoading } = useGiveTakes(currentOrg?.id!);
+
+  const activeRecords = records?.filter(r => r.status !== 'settled') || [];
 
   return (
     <div className="space-y-6 pb-24">
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Give / Take</h1>
-          <p className="text-muted-foreground">Track money you owe or are owed.</p>
+          <p className="text-muted-foreground">Track future payables and receivables.</p>
         </div>
         <div className="flex items-center gap-2">
           <GiveTakeDialog>
@@ -38,14 +42,14 @@ export default function GiveTakePage() {
           <div className="divide-y divide-border">
             {
               isLoading ? <GiveTakeListSkeleton /> :
-                records?.length === 0 ? (
+                activeRecords.length === 0 ? (
                   <div className="flex flex-col items-center justify-center p-12 text-center text-muted-foreground">
                     <ArrowLeftRight className="mx-auto h-12 w-12 text-muted-foreground/50 mb-4" />
-                    <h3 className="text-lg font-semibold">No records yet</h3>
-                    <p className="text-sm max-w-sm mx-auto">Add a record to keep track of money you've lent to friends or borrowed.</p>
+                    <h3 className="text-lg font-semibold">No active records</h3>
+                    <p className="text-sm max-w-sm mx-auto">Add a record to keep track of money you need to take or give.</p>
                   </div>
                 ) :
-                  records?.map(record => (
+                  activeRecords.map(record => (
                     <GiveTakeDialog key={record.id} record={record}>
                       <div className="flex items-center justify-between p-4 hover:bg-muted/40 transition-colors cursor-pointer group">
                         <div className="flex items-center gap-4 overflow-hidden">
@@ -59,7 +63,11 @@ export default function GiveTakePage() {
                           <div className="flex flex-col min-w-0">
                             <div className="flex items-center gap-2">
                               <span className="font-semibold truncate">{record.personName}</span>
-                              <Badge variant="outline" className="text-[10px] h-5 px-1.5">{record.type === 'give' ? 'Lens' : 'Borrowed'}</Badge>
+                              <Badge variant="outline" className={cn("text-[10px] h-5 px-1.5 uppercase",
+                                record.type === 'give' ? "border-red-200 text-red-600" : "border-emerald-200 text-emerald-600"
+                              )}>
+                                {record.type === 'give' ? 'To Give' : 'To Take'}
+                              </Badge>
                             </div>
                             {/* Description/Notes and Due Date */}
                             <div className="flex items-center gap-2 text-xs text-muted-foreground mt-0.5 truncate">
@@ -80,13 +88,33 @@ export default function GiveTakePage() {
                         </div>
 
                         {/* Amount & Status */}
-                        <div className="flex flex-col items-end gap-1 ml-4 shrink-0">
-                          <span className={cn("font-bold text-base tabular-nums", record.type === 'give' ? 'text-red-600 dark:text-red-400' : 'text-emerald-600 dark:text-emerald-400')}>
-                            {record.type === 'give' ? '' : ''} {formatCurrency(record.amount)}
-                          </span>
-                          <Badge variant={record.status === 'settled' ? 'secondary' : 'outline'} className="uppercase text-[10px] h-5">
-                            {record.status.replace('_', ' ')}
-                          </Badge>
+                        <div className="flex items-center gap-4 shrink-0">
+                          <div className="flex flex-col items-end gap-1">
+                            <span className={cn("font-bold text-base tabular-nums", record.type === 'give' ? 'text-red-600 dark:text-red-400' : 'text-emerald-600 dark:text-emerald-400')}>
+                              {record.type === 'give' ? '-' : '+'} {formatCurrency(record.amount)}
+                            </span>
+                            <div className="flex items-center gap-2">
+                              {record.settledAmount > 0 && (
+                                <span className="text-[10px] text-muted-foreground">
+                                  {Math.round((record.settledAmount / record.amount) * 100)}% Paid
+                                </span>
+                              )}
+                              <Badge variant={record.status === 'settled' ? 'secondary' : 'outline'} className="uppercase text-[10px] h-5">
+                                {record.status.replace('_', ' ')}
+                              </Badge>
+                            </div>
+                          </div>
+
+                          {record.status !== 'settled' && (
+                            <div onClick={(e) => e.stopPropagation()}>
+                              <SettleDialog record={record}>
+                                <Button size="sm" variant="ghost" className="h-8 w-8 p-0">
+                                  <ArrowLeftRight className="h-4 w-4" />
+                                  <span className="sr-only">Settle</span>
+                                </Button>
+                              </SettleDialog>
+                            </div>
+                          )}
                         </div>
                       </div>
                     </GiveTakeDialog>

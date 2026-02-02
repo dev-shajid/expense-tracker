@@ -55,9 +55,9 @@ export const useCreateGiveTake = () => {
           queryKey: ['stats', 'org', orgId],
         });
 
-        const typeLabel = variables.type === 'give' ? 'Given' : 'Taken';
-        toast.success(`Amount ${typeLabel}`, {
-          description: `${typeLabel} ${variables.amount} to ${variables.personName}`,
+        const typeLabel = variables.type === 'give' ? 'To Give' : 'To Take';
+        toast.success(`Recorded ${typeLabel}`, {
+          description: `Added amount ${variables.amount} to ${variables.personName}`,
         });
       }
     },

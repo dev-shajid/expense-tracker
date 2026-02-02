@@ -26,7 +26,7 @@ export function OverviewCards({ className }: OverviewCardsProps) {
                     <Wallet className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                    {!isLoading ? <div className="sm:text-2xl text-xl font-bold">{formatCurrency(stats?.currentBalance ?? 0)}</div> : <Skeleton className="h-8 w-24" />}
+                    {!isLoading ? <div className="sm:text-2xl text-lg font-bold">{formatCurrency(stats?.currentBalance ?? 0)}</div> : <Skeleton className="h-8 w-24" />}
                     <p className="text-xs text-muted-foreground">
                         Current available money
                     </p>
@@ -41,7 +41,7 @@ export function OverviewCards({ className }: OverviewCardsProps) {
                     </div>
                 </CardHeader>
                 <CardContent>
-                    {!isLoading ? <div className="sm:text-2xl text-xl font-bold text-emerald-600 dark:text-emerald-400">{formatCurrency(stats?.totalIncome ?? 0)}</div> : <Skeleton className="h-8 w-24" />}
+                    {!isLoading ? <div className="sm:text-2xl text-lg font-bold text-emerald-600 dark:text-emerald-400">{formatCurrency(stats?.totalIncome ?? 0)}</div> : <Skeleton className="h-8 w-24" />}
 
                     <p className="text-xs text-muted-foreground">
                         Total earnings this period
@@ -57,7 +57,7 @@ export function OverviewCards({ className }: OverviewCardsProps) {
                     </div>
                 </CardHeader>
                 <CardContent>
-                    {!isLoading ? <div className="sm:text-2xl text-xl font-bold text-red-600 dark:text-red-400">{formatCurrency(stats?.totalExpense ?? 0)}</div> : <Skeleton className="h-8 w-24" />}
+                    {!isLoading ? <div className="sm:text-2xl text-lg font-bold text-red-600 dark:text-red-400">{formatCurrency(stats?.totalExpense ?? 0)}</div> : <Skeleton className="h-8 w-24" />}
                     <p className="text-xs text-muted-foreground">
                         Total spent this period
                     </p>
@@ -70,12 +70,12 @@ export function OverviewCards({ className }: OverviewCardsProps) {
                     <DollarSign className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                    <div className="flex flex-col gap-1">
-                        <div className="flex justify-between text-xs">
+                    <div className="flex flex-col gap-2">
+                        <div className="flex justify-between text-sm">
                             <span>To Give:</span>
                             {!isLoading ? <span className="font-medium text-red-500">{formatCurrency(stats?.pendingToGive ?? 0)}</span> : <Skeleton className="h-4 w-16" />}
                         </div>
-                        <div className="flex justify-between text-xs">
+                        <div className="flex justify-between text-sm">
                             <span>To Take:</span>
                             {!isLoading ? <span className="font-medium text-emerald-500">{formatCurrency(stats?.pendingToTake ?? 0)}</span> : <Skeleton className="h-4 w-16" />}
                         </div>
