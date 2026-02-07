@@ -15,11 +15,11 @@ interface OverviewCardsProps {
 
 export function OverviewCards({ className }: OverviewCardsProps) {
     const { currentOrg } = useOrganization()
-    const {data: stats, isLoading} = useStats(currentOrg?.id!)
+    const { data: stats, isLoading } = useStats(currentOrg?.id!)
 
 
     return (
-        <div className={cn("grid gap-4 grid-cols-2 lg:grid-cols-4", className)}>
+        <div className={cn("grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4", className)}>
             <Card className="border-green-500/30 bg-green-500/10 backdrop-blur-3xl shadow-lg">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                     <CardTitle className="text-sm font-medium">Total Balance</CardTitle>

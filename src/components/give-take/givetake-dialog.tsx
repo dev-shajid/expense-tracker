@@ -140,7 +140,7 @@ export function GiveTakeDialog({ children, record, open: controlledOpen, onOpenC
                     </Button>
                 )}
             </DialogTrigger>
-            <DialogContent className="sm:max-w-106">
+            <DialogContent className="sm:max-w-[425px]">
                 <DialogHeader>
                     <DialogTitle>{isEdit ? "Edit Record" : "Add Give/Take Record"}</DialogTitle>
                     <DialogDescription>

@@ -184,7 +184,7 @@ export function ExpenseDialog({ children, expense, defaultGroupId, open: control
                     </Button>
                 )}
             </DialogTrigger>
-            <DialogContent className="sm:max-w-106">
+            <DialogContent className="sm:max-w-[425px]">
                 <DialogHeader>
                     <DialogTitle>{isEdit ? "Edit Transaction" : "Add Transaction"}</DialogTitle>
                     <DialogDescription>

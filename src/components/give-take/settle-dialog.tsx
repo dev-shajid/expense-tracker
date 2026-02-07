@@ -136,13 +136,14 @@ export function SettleDialog({ record, children, open: controlledOpen, onOpenCha
                         />
                     </div>
 
-                    <div className="flex items-center space-x-2">
+                    <div className="flex items-start space-x-2">
                         <Checkbox
                             id="add-transaction"
                             checked={addToTransactions}
                             onCheckedChange={(c) => setAddToTransactions(!!c)}
+                            className="mt-1"
                         />
-                        <Label htmlFor="add-transaction">
+                        <Label htmlFor="add-transaction" className="leading-snug">
                             Record in Transactions as {record.type === 'take' ? 'Income' : 'Expense'}?
                         </Label>
                     </div>

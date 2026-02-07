@@ -64,7 +64,7 @@ export function ExpensesList({ expenses, groups, className, showGroupBadge = tru
                             const firstGroup = getGroupName(groupedExpenses[date][0]);
                             const allSame = groupedExpenses[date].every(e => getGroupName(e) === firstGroup);
                             if (firstGroup && allSame) {
-                                return <Badge variant="outline" className="text-[10px] h-4 py-0 px-1 font-normal text-muted-foreground">{firstGroup}</Badge>
+                                return <Badge variant="outline" className="text-[10px] h-4 py-0 px-1 font-normal text-muted-foreground truncate max-w-[100px]">{firstGroup}</Badge>
                             }
                             return null;
                         })()}
@@ -83,7 +83,7 @@ export function ExpensesList({ expenses, groups, className, showGroupBadge = tru
                                                 <div className="flex flex-col min-w-0">
                                                     <div className="flex items-center gap-2">
                                                         <span className="font-medium truncate text-sm">{expense.category}</span>
-                                                        {showGroupBadge && groupName && <Badge variant="secondary" className="text-[10px] h-4 px-1">{groupName}</Badge>}
+                                                        {showGroupBadge && groupName && <Badge variant="secondary" className="text-[10px] h-4 px-1 truncate max-w-[80px]">{groupName}</Badge>}
                                                     </div>
                                                     {expense.notes && <span className="text-[10px] text-muted-foreground truncate">{expense.notes}</span>}
                                                 </div>

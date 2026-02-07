@@ -53,7 +53,7 @@ export function TeamSwitcher({ user }: { user: User | null }) {
                     <Button
                         variant="outline"
                         size="sm"
-                        className="w-50 justify-between"
+                        className="w-[140px] sm:w-[200px] justify-between"
                     >
                         <div className="flex items-center gap-2 truncate">
                             <div className="flex items-center justify-center size-5 rounded bg-primary/10">
