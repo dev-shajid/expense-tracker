@@ -1,6 +1,5 @@
-
 import { Skeleton } from "@/components/ui/skeleton"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardHeader } from "@/components/ui/card"
 
 export function OverviewCardsSkeleton() {
     return (
@@ -72,27 +71,43 @@ export function GroupsListSkeleton() {
 
 export function GiveTakeListSkeleton() {
     return (
-        <div className="rounded-lg border bg-card text-card-foreground shadow-sm">
-            <div className="divide-y divide-border">
-                {Array.from({ length: 5 }).map((_, i) => (
-                    <div key={i} className="flex items-center justify-between p-4">
-                        <div className="flex items-center gap-4">
-                            <Skeleton className="h-10 w-10 rounded-full" />
-                            <div className="space-y-1.5">
-                                <div className="flex items-center gap-2">
-                                    <Skeleton className="h-4 w-32" />
-                                    <Skeleton className="h-5 w-12 rounded-full" />
-                                </div>
-                                <Skeleton className="h-3 w-24" />
+        <div className="divide-y divide-border">
+            {Array.from({ length: 5 }).map((_, i) => (
+                <div key={i} className="flex items-start justify-between gap-3 p-3 sm:p-4">
+                    {/* Left: icon + text */}
+                    <div className="flex items-start gap-3 flex-1 min-w-0">
+                        {/* Icon circle */}
+                        <Skeleton className="size-9 sm:size-10 rounded-full shrink-0 mt-0.5" />
+
+                        {/* Text stack */}
+                        <div className="flex flex-col gap-1.5 min-w-0 flex-1">
+                            {/* Name + badge */}
+                            <div className="flex items-center gap-2 flex-wrap">
+                                <Skeleton className="h-4 w-28" />
+                                <Skeleton className="h-4 w-14 rounded-full" />
+                            </div>
+                            {/* Due date / notes */}
+                            <Skeleton className="h-3 w-24" />
+                            {/* Mobile-only amount row */}
+                            <div className="flex items-center gap-2 sm:hidden">
+                                <Skeleton className="h-4 w-20" />
+                                <Skeleton className="h-4 w-14 rounded-full" />
                             </div>
                         </div>
-                        <div className="flex flex-col items-end gap-1">
-                            <Skeleton className="h-5 w-20" />
-                            <Skeleton className="h-5 w-16 rounded-full" />
-                        </div>
                     </div>
-                ))}
-            </div>
+
+                    {/* Right: desktop amount + settle button */}
+                    <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+                        {/* Desktop-only amount + status */}
+                        <div className="hidden sm:flex flex-col items-end gap-1.5">
+                            <Skeleton className="h-5 w-20" />
+                            <Skeleton className="h-4 w-16 rounded-full" />
+                        </div>
+                        {/* Settle button */}
+                        <Skeleton className="h-8 w-8 rounded-md" />
+                    </div>
+                </div>
+            ))}
         </div>
     )
 }
