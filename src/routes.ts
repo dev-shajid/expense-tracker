@@ -1,4 +1,3 @@
-
 /*
  * An array of routes that are used for the authentication process
  * These routes will redirect logged in users to /profile

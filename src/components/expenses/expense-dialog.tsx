@@ -184,7 +184,7 @@ export function ExpenseDialog({ children, expense, defaultGroupId, open: control
                     </Button>
                 )}
             </DialogTrigger>
-            <DialogContent className="sm:max-w-[425px]">
+            <DialogContent className="sm:max-w-106.25">
                 <DialogHeader>
                     <DialogTitle>{isEdit ? "Edit Transaction" : "Add Transaction"}</DialogTitle>
                     <DialogDescription>
@@ -300,7 +300,7 @@ export function ExpenseDialog({ children, expense, defaultGroupId, open: control
                                                 mode="single"
                                                 selected={field.value}
                                                 onSelect={field.onChange}
-                                                disabled={(date) =>
+                                                disabled={(date:Date) =>
                                                     date > new Date() || date < new Date("1900-01-01")
                                                 }
                                                 initialFocus

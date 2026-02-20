@@ -1,8 +1,6 @@
 'use server';
 
-import { DEFAULT_AUTH_REDIRECT, DEFAULT_UNAUTH_REDIRECT } from '@/routes';
 import { cookies } from 'next/headers';
-import { redirect } from 'next/navigation';
 
 export async function createSession(uid: string) {
     const cookieStore = await cookies();

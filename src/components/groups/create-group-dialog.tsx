@@ -130,7 +130,7 @@ export function GroupDialog({ group, children, open: controlledOpen, onOpenChang
                     </Button>
                 )}
             </DialogTrigger>}
-            <DialogContent className="sm:max-w-[425px]">
+            <DialogContent className="sm:max-w-106.25">
                 <DialogHeader>
                     <DialogTitle>{isEdit ? "Edit Group" : "Create Group"}</DialogTitle>
                     <DialogDescription>
