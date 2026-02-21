@@ -25,11 +25,12 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { useDeleteGroup, useGroupDetails, useUpdateGroup } from "@/services/groups.service"
 import { useExpensesForGroup } from "@/services/expenses.service"
+import Loading from "./loading"
 
 export default function GroupDetailsPage() {
     const router = useRouter()
     const params = useParams()
-    const { currentOrg } = useOrganization()
+    const { currentOrg, isLoading: isOrgLoading } = useOrganization()
 
     const [editDialogOpen, setEditDialogOpen] = useState(false)
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
@@ -57,6 +58,10 @@ export default function GroupDetailsPage() {
                 setDeleteDialogOpen(false)
             }
         });
+    }
+
+    if (isOrgLoading || !currentOrg) {
+        return <Loading />
     }
 
     return (

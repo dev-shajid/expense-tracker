@@ -7,9 +7,10 @@ import { ExpenseDialog } from "@/components/expenses/expense-dialog"
 import { ExpensesListSkeleton } from "@/components/skeletons"
 import { useExpenses } from "@/services/expenses.service"
 import { useGroups } from "@/services/groups.service"
+import Loading from "./loading"
 
 export default function ExpensesPage() {
-  const { currentOrg } = useOrganization()
+  const { currentOrg, isLoading: isOrgLoading } = useOrganization()
 
   const { data: expenses, isLoading: expensesLoading, refetch: refetchExpenses } = useExpenses(currentOrg?.id!);
   const { data: groups, isLoading: groupsLoading, refetch: refetchGroups } = useGroups(currentOrg?.id!);
@@ -20,6 +21,11 @@ export default function ExpensesPage() {
   }
 
   const loading = expensesLoading || groupsLoading;
+
+  if (isOrgLoading || !currentOrg) {
+    return <Loading />
+  }
+
   return (
     <div className="space-y-6 pb-24">
       {/* Header section with Title and Add Button */}

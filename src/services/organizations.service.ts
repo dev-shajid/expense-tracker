@@ -141,13 +141,6 @@ export const useStats = (orgId: string) => {
     queryKey: statsQueries.byOrg(orgId),
     queryFn: () => fetchStats(orgId),
     enabled: !!orgId,
-    staleTime: 1000 * 60 * 1, // 1 minute - stats change frequently
-    placeholderData: {
-      currentBalance: 0,
-      totalIncome: 0,
-      totalExpense: 0,
-      pendingToGive: 0,
-      pendingToTake: 0,
-    } as Stats,
+    staleTime: 1000 * 60 * 1,
   });
 };

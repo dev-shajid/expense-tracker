@@ -5,9 +5,14 @@ import { OverviewCards } from "@/components/dashboard/overview-cards"
 import { ArrowLeftRight, CreditCard, Plus, Users } from "lucide-react"
 import Link from "next/link"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { DashboardSkeleton } from "@/components/skeletons"
 
 export default function DashboardPage() {
-  const { currentOrg } = useOrganization()
+  const { currentOrg, isLoading } = useOrganization()
+
+  if (isLoading || !currentOrg) {
+    return <DashboardSkeleton />
+  }
 
   const quickActions = [
     { label: "New Expense", icon: Plus, href: "/expenses", color: "text-red-500", bg: "bg-red-500/10" },

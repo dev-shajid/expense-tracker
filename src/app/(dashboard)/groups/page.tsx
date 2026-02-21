@@ -8,12 +8,17 @@ import { Badge } from "@/components/ui/badge"
 import Link from "next/link"
 import { GroupsListSkeleton } from "@/components/skeletons"
 import { useGroups } from "@/services/groups.service"
+import Loading from "./loading"
 
 export const dynamic = 'force-dynamic';
 
 export default function GroupsPage() {
-  const { currentOrg } = useOrganization()
+  const { currentOrg, isLoading: isOrgLoading } = useOrganization()
   const { data: groups, isLoading: loading, refetch: refetchGroups } = useGroups(currentOrg?.id!);
+
+  if (isOrgLoading || !currentOrg) {
+    return <Loading />
+  }
 
   return (
     <div className="space-y-6 pb-24">

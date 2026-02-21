@@ -7,14 +7,17 @@ import { cn } from "@/lib/utils"
 import { useOrganization } from "@/contexts/OrganizationContext"
 import { Skeleton } from "../ui/skeleton"
 import { useStats } from "@/services/organizations.service"
+import { OverviewCardsSkeleton } from "../skeletons"
 
 interface OverviewCardsProps {
     className?: string;
 }
 
 export function OverviewCards({ className }: OverviewCardsProps) {
-    const { currentOrg } = useOrganization()
+    const { currentOrg, isLoading: isOrgLoading } = useOrganization()
     const { data: stats, isLoading } = useStats(currentOrg?.id!)
+
+    if (isLoading || isOrgLoading) return <OverviewCardsSkeleton />
 
     return (
         <div className={cn("grid gap-3 sm:gap-4 grid-cols-2 lg:grid-cols-4", className)}>

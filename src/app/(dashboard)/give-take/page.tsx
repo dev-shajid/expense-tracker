@@ -11,11 +11,16 @@ import { format } from "date-fns"
 import { useGiveTakes } from "@/services/give-take.service"
 import { GiveTakeListSkeleton } from "@/components/skeletons"
 import { SettleDialog } from "@/components/give-take/settle-dialog"
+import Loading from "./loading"
 
 export default function GiveTakePage() {
-  const { currentOrg } = useOrganization()
+  const { currentOrg, isLoading: isOrgLoading } = useOrganization()
   const { data: records, isLoading } = useGiveTakes(currentOrg?.id!)
   const activeRecords = records?.filter(r => r.status !== 'settled') || []
+
+  if (isOrgLoading || !currentOrg) {
+    return <Loading />
+  }
 
   return (
     <div className="space-y-6 pb-24">
@@ -53,7 +58,7 @@ export default function GiveTakePage() {
               activeRecords.map(record => (
                 <GiveTakeDialog key={record.id} record={record}>
                   <div className="flex items-start justify-between gap-3 p-3 sm:p-4 hover:bg-muted/40 transition-colors cursor-pointer group">
-                    
+
                     {/* Left: Icon + Info */}
                     <div className="flex items-start gap-3 min-w-0 flex-1">
                       {/* Icon */}

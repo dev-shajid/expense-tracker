@@ -14,6 +14,7 @@ interface OrganizationContextType {
     currentOrg: Organization | null;
     setCurrentOrg: (org: Organization) => void;
     organizations: Organization[];
+    isLoading: boolean;
 }
 
 export function OrganizationProvider({ children }: { children: React.ReactNode }) {
@@ -81,7 +82,7 @@ export function OrganizationProvider({ children }: { children: React.ReactNode }
     }
 
     return (
-        <OrganizationContext.Provider value={{ currentOrg, setCurrentOrg: handleSetCurrentOrg, organizations: orgs }}>
+        <OrganizationContext.Provider value={{ currentOrg, setCurrentOrg: handleSetCurrentOrg, organizations: orgs, isLoading }}>
             {children}
         </OrganizationContext.Provider>
     );
