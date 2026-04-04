@@ -1,36 +1,122 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 💰 Daily Expense Tracker - Modern Financial Management
 
-## Getting Started
+[![Next.js](https://img.shields.io/badge/Next.js-16-black?style=flat-square&logo=next.js)](https://nextjs.org/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5-blue?style=flat-square&logo=typescript)](https://www.typescriptlang.org/)
+[![Firebase](https://img.shields.io/badge/Firebase-12-orange?style=flat-square&logo=firebase)](https://firebase.google.com/)
+[![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-4-38B2AC?style=flat-square&logo=tailwind-css)](https://tailwindcss.com/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=flat-square)](https://opensource.org/licenses/MIT)
 
-First, run the development server:
+A robust, enterprise-ready Daily Expense Tracker built with **Next.js 16**, **TypeScript**, and **Firebase**. This Progressive Web App (PWA) is designed to help users and organizations effortlessly monitor their finances, manage group expenses, and track personal debts with real-time synchronization.
+
+---
+
+## ✨ Key Features
+
+- **📊 Comprehensive Dashboard**: Real-time overview of income, expenses, and current balances with interactive charts.
+- **👥 Group Expense Splitting**: Create groups, invite members, and split bills seamlessly.
+- **💸 Give & Take Management**: Track debts and credits with detailed logs of who owes whom.
+- **🏢 Organization-Based Architecture**: Supports multi-tenancy models for managing different financial contexts (e.g., Personal vs. Business).
+- **📱 PWA Ready**: Installable on mobile and desktop for a native-like experience with offline capabilities.
+- **⚡ Real-time Updates**: Powered by TanStack Query and Firebase for instant data reflection across devices.
+- **🎨 Modern UI/UX**: Built with Shaden UI, Radix UI, and Motion (Framer Motion) for beautiful, fluid transitions and dark mode support.
+
+---
+
+## 🛠️ Built With
+
+- **Framework**: [Next.js 16](https://nextjs.org/) (App Router)
+- **Language**: [TypeScript](https://www.typescriptlang.org/)
+- **Backend-as-a-Service**: [Firebase](https://firebase.google.com/) (Firestore & Authentication)
+- **State Management**: [TanStack Query v5](https://tanstack.com/query/latest)
+- **Styling**: [Tailwind CSS 4](https://tailwindcss.com/) + [Shadcn UI](https://ui.shadcn.com/)
+- **Form Management**: [React Hook Form](https://react-hook-form.com/) + [Zod Validation](https://zod.dev/)
+- **Animations**: [Motion](https://motion.dev/) (Framer Motion)
+- **Icons**: [Lucide React](https://lucide.dev/)
+- **Notifications**: [Sonner](https://sonner.stevenly.me/)
+
+---
+
+## 📂 Project Structure
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+src/
+├── app/                 # Next.js App Router (Layouts, Pages, Server Actions)
+│   ├── (auth)/          # Authentication routes (Login, Signup)
+│   ├── (dashboard)/     # Main application features (Expenses, Groups, etc.)
+│   ├── actions/         # Server-side logic for database operations
+│   └── api/             # API endpoints
+├── components/          # Reusable UI components (shadcn/ui + custom)
+├── contexts/            # React Contexts (Auth, Organization, Theme)
+├── lib/                 # Shared utilities, Firebase config, and Query Client
+├── services/            # Custom hooks and TanStack Query integration
+├── types/               # TypeScript interfaces and type definitions
+└── routes.ts            # Application route configuration
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+---
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## 🚀 Getting Started
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### Prerequisites
 
-## Learn More
+- Node.js 18+
+- A Firebase project
 
-To learn more about Next.js, take a look at the following resources:
+### Installation
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+1. **Clone the repository:**
+   ```bash
+   git clone https://github.com/dev-shajid/expense-tracker.git
+   cd expense-tracker
+   ```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+2. **Install dependencies:**
+   ```bash
+   npm install
+   ```
 
-## Deploy on Vercel
+3. **Set up Environment Variables:**
+   Create a `.env.local` file in the root directory and add your Firebase credentials:
+   ```env
+   NEXT_PUBLIC_FIREBASE_API_KEY=your_api_key
+   NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=your_auth_domain
+   NEXT_PUBLIC_FIREBASE_PROJECT_ID=your_project_id
+   NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=your_storage_bucket
+   NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=your_sender_id
+   NEXT_PUBLIC_FIREBASE_APP_ID=your_app_id
+   ```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+4. **Run the development server:**
+   ```bash
+   npm run dev
+   ```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+5. **Build for production:**
+   ```bash
+   npm run build
+   ```
+
+---
+
+## 📐 Architecture & Logic
+
+The project follows a modern, type-safe architecture:
+
+- **Server-Side Operations**: Utilizes Next.js Server Actions for all write operations to the database, ensuring security and performance.
+- **Client-Side State**: TanStack Query is used as the caching layer, handling data synchronization and invalidation after mutations to keep the UI up-to-date without manual refreshes.
+- **Custom Security Middleware**: Implements a sophisticated proxy layer for authentication using cookies and Next.js middleware patterns to protect private routes while optimizing performance for prefetched assets and PWA components.
+- **Modular Services**: Business logic is encapsulated in `src/services/`, making the application easy to test and maintain.
+- **Responsive Design**: Mobile-first approach using Tailwind CSS, ensuring accessibility and ease of use across all screen sizes.
+
+---
+
+## 👤 Author
+
+**Mohammed Sajidul Islam**
+- GitHub: [@dev-shajid](https://github.com/dev-shajid)
+- LinkedIn: [dev-shajid](https://www.linkedin.com/in/dev-shajid/)
+
+---
+
+> [!TIP]
+> This tracker was built for performance and scalability, leveraging Next.js 16's latest features like Server Components and optimized rendering.
